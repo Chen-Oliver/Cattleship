@@ -20,7 +20,7 @@ Technical Design:
     semaphores for taking turns
   
   Jobs:
- 	  Oliver:	Networking + Gameplay
+ 	  Oliver: Networking + Gameplay
 	  Ceming: Graphics + Networking
 	  Dewan:  Gameplay + Graphics
 
@@ -36,7 +36,7 @@ Technical Design:
   Timeline:
     3-5 days for gameplay
     3-5 days graphics
-   3-5 days networking
+    3-5 days networking
     Remaining time: debugging, extra features
 
 
