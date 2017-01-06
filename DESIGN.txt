@@ -1,0 +1,43 @@
+“Team Cattleship” Members: Oliver Chen, Ceming Huang, Dewan Sunnah
+
+High level Description: 
+	We will be implementing the well-known battleship game, allowing two players on different networks to play against each other.
+User Interface:
+	Server matches the two players(clients)
+	The board will be shown graphically
+	Players start by placing their ships
+	Players will enter the coordinates of where they wish to drop a bomb
+	Players go turn by turn, the board is updated after each turn
+	Extra features: Power-ups, Player v. AI
+Technical Design:
+   
+  Topics: 
+    Memory Allocation
+    Networking(with forking) to match players and send info about game status 
+    Reading and writing to files to allow the server to gain access to the ship locations and previous moves made.
+    Signals for quitting game
+    shared memory stores player health/ships left 
+    semaphores for taking turns
+  
+  Jobs:
+ 	  Oliver:	Networking + Gameplay
+	  Ceming: Graphics + Networking
+	  Dewan:  Gameplay + Graphics
+
+  Data Structures: 
+  	2d array for keeping track of the boards
+
+  Algorithms:
+
+    Game start algorithm creates board arrays, draws them graphically using user inputs for boat locations and stores the board information(ship location) in files
+
+    Algorithm to determine the outcome of player moves and sends info to players accordingly as well as updates the information stored in the files	
+
+  Timeline:
+    3-5 days for gameplay
+    3-5 days graphics
+   3-5 days networking
+    Remaining time: debugging, extra features
+
+
+
