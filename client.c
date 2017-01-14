@@ -105,9 +105,9 @@ int main( int argc, char *argv[] ){
 
   int semkey = ftok("makefile",23);
   int semid = semget(semkey,1,0);
-  int availConnections = semctl(semid,0,GETVAL)
-  if(availConnections<2)printf("A game is ongoing. Try again later.\n"); //semaphore is 0,no more connecting
- else{  //if semaphore val is 2(both players are finished) then allow for connection
+  int availConnections = semctl(semid,0,GETVAL);
+  if(availConnections==0)printf("A game is ongoing. Try again later.\n"); //semaphore is 0,no more connecting
+ else{
   sd = client_connect(host);
   int i = 10;
   startGame();
