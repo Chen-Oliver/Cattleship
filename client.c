@@ -1,6 +1,9 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <ncurses.h>
+#include "networking.h"
 
 struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
   int x,y;
@@ -51,7 +54,8 @@ void startGame(){
 }
 //allows player to use arrow keys to move around board(s)
 void moveNplace(){
-  while(1){
+  int a = 1;
+  while(a){
   switch(getch()){
     case KEY_UP:
       if(cursor.y > 2) cursor.y -= 2;//at y=4(row 2) moves to y=2(row 1)
@@ -67,6 +71,7 @@ void moveNplace(){
       break;
     case 's':
       printw("O");
+      a--;
       break;
     default:
       break;
@@ -75,8 +80,48 @@ void moveNplace(){
     refresh();
   }
 }
-int main(){
+
+//useless function just for testing stuff out
+void place(int deltaX){
+  cursor.x = (cursor.x) + deltaX;
+  move(cursor.y,cursor.x);
+  printw("O");
+  refresh();
+  sleep(5);
+}
+int main( int argc, char *argv[] ) {
+  char *host;
+  if (argc != 2 ) {
+    printf("host not specified, connecting to 127.0.0.1\n");
+    host = "127.0.0.1";
+  }
+  else
+    host = argv[1];
+  char buffer[MESSAGE_BUFFER_SIZE];
+  int sd;
+
+  sd = client_connect( host );
+  int i = 10;
   startGame();
   moveNplace();
+  write(sd,"graphics working a ok",100);
+  while(i!=0){
+
+  /*while (1) {
+    printf("enter message: ");
+    fgets( buffer, sizeof(buffer), stdin );
+    char *p = strchr(buffer, '\n');
+    *p = 0;
+
+    write( sd, buffer, sizeof(buffer) );
+    read( sd, buffer, sizeof(buffer) );
+    printf( "received: %s\n", buffer );
+  } */
+    read(sd, buffer, sizeof(buffer));
+    place(4);
+    write(sd,"received the bomb position",100);
+    i--;
+}
+  endwin();
   return 0;
 }
