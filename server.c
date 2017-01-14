@@ -2,19 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
 #include "networking.h"
 
 void process( char * s );
 void sub_server( int sd );
-
 int main() {
-
   int sd, connection;
-
   sd = server_setup();
-
-  while (1) {
-
+  while(1){
     connection = server_connect( sd );
 
     int f = fork();

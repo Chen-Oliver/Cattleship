@@ -3,6 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <ncurses.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
 #include "networking.h"
 
 struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
@@ -89,10 +92,10 @@ void place(int deltaX){
   refresh();
   sleep(5);
 }
-int main( int argc, char *argv[] ) {
+int main( int argc, char *argv[] ){
   char *host;
-  if (argc != 2 ) {
-    printf("host not specified, connecting to 127.0.0.1\n");
+  if (argc != 2) {
+    printf("host not specified, attempting connection to 127.0.0.1\n");
     host = "127.0.0.1";
   }
   else
@@ -100,10 +103,16 @@ int main( int argc, char *argv[] ) {
   char buffer[MESSAGE_BUFFER_SIZE];
   int sd;
 
-  sd = client_connect( host );
+  int semkey = ftok("makefile",23);
+  int semid = semget(semkey,1,0);
+  int availConnections = semctl(semid,0,GETVAL)
+  if(availConnections<2)printf("A game is ongoing. Try again later.\n"); //semaphore is 0,no more connecting
+ else{  //if semaphore val is 2(both players are finished) then allow for connection
+  sd = client_connect(host);
   int i = 10;
   startGame();
   moveNplace();
+  //following stuff is mostly useless, just testing stuff out
   write(sd,"graphics working a ok",100);
   while(i!=0){
 
@@ -121,7 +130,8 @@ int main( int argc, char *argv[] ) {
     place(4);
     write(sd,"received the bomb position",100);
     i--;
-}
+  }
   endwin();
+}
   return 0;
 }

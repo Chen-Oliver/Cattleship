@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -31,7 +33,12 @@ int server_setup() {
   sock.sin_port = htons(9001);
   i = bind( sd, (struct sockaddr *)&sock, sizeof(sock) );
   error_check( i, "server bind" );
-
+ //creates semaphore of value 2 to limit connections to 2 players
+  int semkey = ftok("makefile",23);
+  int semid = semget(semkey,1,IPC_CREAT|IPC_EXCL|0644);
+  union semun su;
+  su.val = 2;
+  semctl(semid,0,SETVAL,su);
   return sd;
 }
 
@@ -47,7 +54,6 @@ int server_connect(int sd) {
   error_check( connection, "server accept" );
 
   printf("[server] connected to %s\n", inet_ntoa( sock1.sin_addr ) );
-
   return connection;
 }
 
@@ -64,6 +70,14 @@ int client_connect( char *host ) {
   sock.sin_port = htons(9001);
 
   printf("[client] connecting to: %s\n", host );
+  //when a client connects, down semaphore by 1
+  int semkey = ftok("makefile",23);
+  int semid = semget(semkey,1,0);
+  struct sembuf sb;
+  sb.sem_op=-1;
+  sb.sem_num=0;
+  sb.sem_flg=SEM_UNDO;
+  semop(semid,&sb,1);
   i = connect( sd, (struct sockaddr *)&sock, sizeof(sock) );
   error_check( i, "client connect");
 
