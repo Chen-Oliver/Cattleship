@@ -11,7 +11,9 @@
 struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
   int x,y;
 }cursor;
-
+WINDOW *status_window;
+int winHeight=5;
+int winWidth=50;
 //set cursor y and x to initY and initX if not already then move them by deltaY and deltaX
 void movecursor(int initY,int initX, int deltaY,int deltaX){
     if((cursor.y)!= initY) cursor.y = initY;
@@ -20,7 +22,17 @@ void movecursor(int initY,int initX, int deltaY,int deltaX){
     cursor.x = (cursor.x)+deltaX;
     move(cursor.y,cursor.x);
 }
+WINDOW *create_newwin(int height, int width, int starty, int startx){
+  WINDOW *local_win;
 
+	local_win = newwin(height, width, starty, startx);
+	box(local_win, 0 , 0);		/* 0, 0 gives default characters
+					 * for the vertical and horizontal
+					 * lines			*/
+	wrefresh(local_win);		/* Show that box 		*/
+
+	return local_win;
+}
 //y and x: coords of where to print
 //whichboard: either 1 or 2, specificies if "Your Board" or "Opponent Board" is printed
 void printboard(int y,int x,int whichPlayer){
@@ -47,13 +59,15 @@ void printboard(int y,int x,int whichPlayer){
     }
     movecursor(y,x,2,5); //moves cursor to the first box on the board
   }
-
+//starts graphics
 void startGame(){
   initscr();
   noecho();
   keypad(stdscr,TRUE);
   printboard(0,0,1);
   refresh();
+  status_window = create_newwin(winHeight,winWidth,23,0);
+  wrefresh(status_window);
 }
 //allows player to use arrow keys to move around board(s)
 void moveNplace(){
@@ -107,7 +121,7 @@ int main( int argc, char *argv[] ){
   int semid = semget(semkey,1,0);
   int availConnections = semctl(semid,0,GETVAL);
   if(availConnections==0)printf("A game is ongoing. Try again later.\n"); //semaphore is 0,no more connecting
- else{
+ else{  //need a way to ensure that both players have closed game before new people can join
   sd = client_connect(host);
   int i = 10;
   startGame();
@@ -127,6 +141,8 @@ int main( int argc, char *argv[] ){
     printf( "received: %s\n", buffer );
   } */
     read(sd, buffer, sizeof(buffer));
+    mvwprintw(status_window,2,1,buffer);
+    wrefresh(status_window);
     place(4);
     write(sd,"received the bomb position",100);
     i--;

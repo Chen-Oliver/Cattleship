@@ -17,7 +17,6 @@ int main() {
 
     int f = fork();
     if ( f == 0 ) {
-
       close(sd);
       sub_server( connection );
 
@@ -34,7 +33,6 @@ void sub_server( int sd ) {
 
   char buffer[MESSAGE_BUFFER_SIZE];
   while (read( sd, buffer, sizeof(buffer) )) {
-
     printf("[SERVER %d] received: %s\n", getpid(), buffer );
     process( buffer );
     write( sd, buffer, sizeof(buffer));
