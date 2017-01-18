@@ -28,7 +28,7 @@ void printboard(){
 	   "____________________________________________\n"
 	   "| 5|   |   |   |   |   |   |   |   |   |   |\n"
 	   "____________________________________________\n"
-	   "| 6|   |   |   |   |   |   |   |   |   |   |\n"
+	   "| 6|   |   |   |   |   | O | O | O |   |   |\n"
 	   "____________________________________________\n"
 	   "| 7|   |   |   |   |   |   |   |   |   |   |\n"
 	   "____________________________________________\n"
@@ -51,44 +51,89 @@ void startGame(){
   refresh();
 }
 
-//chooses ship to be placed
-void chooseShip(int n){
-  if (n==5){
+void putShipV(int x){
+  int n=x;
+  int m=1;
+  printw("O");
+  while (n){
+    move(cursor.y+(2*m),cursor.x);
     printw("O");
-    move(cursor.y,cursor.x+4);
-    printw("O");
-  }
-  if(n==4 || n==3){
-    printw( "O");
-    move(cursor.y, cursor.x+4);
-    printw( "O");
-    move(cursor.y, cursor.x-4);
-    printw( "O");
-  }
-  if(n==2){
-    printw( "O");
-    move(cursor.y, cursor.x+4);
-    printw( "O");
-    move(cursor.y, cursor.x-4);
-    printw( "O");
-    move(cursor.y, cursor.x+8);
-    printw( "O");
-  }
-  if(n==1){
-    printw( "O");
-    move(cursor.y, cursor.x+4);
-    printw( "O");
-    move(cursor.y, cursor.x-4);
-    printw( "O");
-    move(cursor.y, cursor.x+8);
-    printw( "O");
-    move(cursor.y, cursor.x-8);
-    printw( "O");
+    n--;
+    if(n==0){
+      move(cursor.y-(2*m),cursor.x);
+      printw("O");
+      n--;
+      m++;
+    }
   }
 }
 
+      
+      
+    
+    
+
+//chooses ship to be placed
+void chooseShipV(int n){
+  if (n==6){
+    putShipH(2);
+  }
+  if(n==4 || n==5){
+    putShipH(3);
+  }
+  if(n==3){
+    putShipH(4);
+  }
+  if(n==2){
+    putShipH(5);
+  }
+}
+
+
+void putShipH(int x){
+  int n=x;
+  int m=1;
+  printw("O");
+  while (n){
+    move(cursor.y,cursor.x+(4*m));
+    printw("O");
+    n--;
+    if(n==0){
+      move(cursor.y,cursor.x-(4*m));
+      printw("O");
+      n--;
+      m++;
+    }
+  }
+}
+
+      
+      
+    
+    
+
+//chooses ship to be placed
+void chooseShipH(int n){
+  if (n==6){
+    putShipH(2);
+  }
+  if(n==4 || n==5){
+    putShipH(3);
+  }
+  if(n==3){
+    putShipH(4);
+  }
+  if(n==2){
+    putShipH(5);
+  }
+}
+
+//void checkship(x){
+  
+  
+
 void placeShips(){
-  int x = 5;
+  int x = 6;
   while(x){
     switch(getch()){
     case KEY_UP:
@@ -103,8 +148,11 @@ void placeShips(){
     case KEY_RIGHT:
       if(cursor.x < 39) cursor.x += 4;//at x=37(column 9) moves to x=41(column 10)
       break;
-    case 's':
-      chooseShip(x);
+    case 'h':
+      chooseShipH(x);
+      x--;
+    case 'h':
+      chooseShipV(x);
       x--;
       break;
     default:
@@ -113,8 +161,7 @@ void placeShips(){
     move(cursor.y,cursor.x);
     refresh();
   }
-  sleep(1);
-  endwin();
+  //endwin();
 }
 
 int main(){
