@@ -40,6 +40,9 @@ int server_setup() {
   su.val = 2;
   semctl(semid,0,SETVAL,su);
   return sd;
+
+  int shmkey = ftok("makefile",6);
+  int shmid = shmget(key,2*sizeof(int),0644|IPC_CREAT);
 }
 
 int server_connect(int sd) {
