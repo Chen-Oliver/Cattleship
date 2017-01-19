@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <sys/shm.h>
 #include "networking.h"
 
 struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
@@ -113,32 +114,12 @@ int main( int argc, char *argv[] ){
   int semid = semget(semkey,1,0);
   int availConnections = semctl(semid,0,GETVAL);
   if(availConnections==0)printf("A game is ongoing. Try again later.\n"); //semaphore is 0,no more connecting
+
  else{  //need a way to ensure that both players have closed game before new people can join
   sd = client_connect(host);
-  int i = 10;
   startGame();
   moveNplace();
-  //following stuff is mostly useless, just testing stuff out
-  write(sd,"graphics working a ok",100);
-  while(i!=0){
-
-  /*while (1) {
-    printf("enter message: ");
-    fgets( buffer, sizeof(buffer), stdin );
-    char *p = strchr(buffer, '\n');
-    *p = 0;
-
-    write( sd, buffer, sizeof(buffer) );
-    read( sd, buffer, sizeof(buffer) );
-    printf( "received: %s\n", buffer );
-  } */
-    read(sd, buffer, sizeof(buffer));
-    mvwprintw(status_window,2,1,buffer);
-    wrefresh(status_window);
-    //place(4);
-    //write(sd,"received the bomb position",100);
-    //i--;
-  }
+  sleep(10);
   endwin();
 }
   return 0;

@@ -10,7 +10,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-
+#include <sys/shm.h>
 void error_check( int i, char *s ) {
   if ( i < 0 ) {
     printf("%d\n", i);
@@ -37,10 +37,10 @@ int server_setup() {
   int semkey = ftok("makefile",23);
   int semid = semget(semkey,1,IPC_CREAT|IPC_EXCL|0644);
   union semun su;
-  su.val = 2;
+  su.val = 1;
   semctl(semid,0,SETVAL,su);
    int shmkey = ftok("makefile",6);
-  int shmid = shmget(key,sizeof(int),0644|IPC_CREAT);
+  int shmid = shmget(shmkey,3*sizeof(int),0644|IPC_CREAT);
   return sd;
 
 }

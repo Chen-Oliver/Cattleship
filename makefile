@@ -1,7 +1,7 @@
 all: server client
 
 server: server.o networking.o
-	gcc -o server server.o networking.o
+	gcc -lncurses -o server server.o networking.o
 
 client: client.o networking.o
 	gcc -lncurses -o client client.o networking.o
