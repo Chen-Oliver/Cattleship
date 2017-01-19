@@ -98,14 +98,6 @@ void moveNplace(){
   }
 }
 
-//useless function just for testing stuff out
-void place(int deltaX){
-  cursor.x = (cursor.x) + deltaX;
-  move(cursor.y,cursor.x);
-  printw("O");
-  refresh();
-  sleep(5);
-}
 int main( int argc, char *argv[] ){
   char *host;
   if (argc != 2) {
@@ -143,9 +135,9 @@ int main( int argc, char *argv[] ){
     read(sd, buffer, sizeof(buffer));
     mvwprintw(status_window,2,1,buffer);
     wrefresh(status_window);
-    place(4);
-    write(sd,"received the bomb position",100);
-    i--;
+    //place(4);
+    //write(sd,"received the bomb position",100);
+    //i--;
   }
   endwin();
 }
