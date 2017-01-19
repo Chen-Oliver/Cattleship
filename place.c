@@ -10,6 +10,17 @@
 //need to simplify the place pieces function
 //need to put ship info into a file
 
+int board [10][10]= {0};
+
+
+
+void addpiece(int y, int x){
+  int a = y-2;
+  int b = x-5;
+  a = a/2;
+  b = b/4;
+  board[b][a] = 1;
+  }
 
 struct coords{
 int x,y;
@@ -53,11 +64,11 @@ void startGame(){
 
 
 int checkshipV( int n){
-  if(n==6){
-    if (cursor.y+2>20){
-      return 0;
-    }
-  }
+  //if(n==6){
+  //if (cursor.y+2>20){
+  //  return 0;
+  // }
+  // }
 
   if(n==4||5){
     if (cursor.y+2>20 || cursor.y-2<1){
@@ -81,39 +92,52 @@ int checkshipV( int n){
 void chooseShipV(int n){
   if(n==6){
     printw( "O");
-    move(cursor.y+2, cursor.x);
+    addpiece(cursor.y, cursor.x);
+    move(cursor.y-2, cursor.x);
     printw( "O");
+    addpiece(cursor.y-2, cursor.x);
   }
   if(n==5 || n==4){
     printw( "O");
+    addpiece(cursor.y, cursor.x);
     move(cursor.y+2, cursor.x);
     printw( "O");
+    addpiece(cursor.y+2, cursor.x);
     move(cursor.y-2, cursor.x);
     printw( "O");
+    addpiece(cursor.y-2, cursor.x);
   }
 
   if(n==3){
     printw( "O");
+    addpiece(cursor.y, cursor.x);
     move(cursor.y+2, cursor.x);
     printw( "O");
+    addpiece(cursor.y+2, cursor.x);
     move(cursor.y-2, cursor.x);
     printw( "O");
+    addpiece(cursor.y-2, cursor.x);
     move(cursor.y+4, cursor.x);
     printw( "O");
+    addpiece(cursor.y+4, cursor.x);
   }
 
   if(n==2){
     printw( "O");
+    addpiece(cursor.y, cursor.x);
     move(cursor.y+2, cursor.x);
     printw( "O");
+    addpiece(cursor.y+2, cursor.x);
     move(cursor.y-2, cursor.x);
     printw( "O");
+    addpiece(cursor.y-2, cursor.x);
     move(cursor.y+4, cursor.x);
     printw( "O");
+    addpiece(cursor.y+4, cursor.x);
     move(cursor.y-4, cursor.x);
     printw( "O");
+    addpiece(cursor.y-4, cursor.x);
   }
-  move(cursor.y, cursor.x);
 
 }
 int checkshipH( int n){
@@ -146,39 +170,52 @@ int checkshipH( int n){
 void chooseShipH(int n){
   if(n==6){
     printw( "O");
+    addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x+4);
     printw( "O");
+    addpiece(cursor.y, cursor.x);
   }
   if(n==5 || n==4){
     printw( "O");
+    addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x+4);
     printw( "O");
+    addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x-4);
     printw( "O");
+    addpiece(cursor.y, cursor.x);
   }
   
   if(n==3){
     printw( "O");
+    addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x+4);
     printw( "O");
+    addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x-4);
     printw( "O");
+    addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x+8);
     printw( "O");
+    addpiece(cursor.y, cursor.x);
   }
   
   if(n==2){
     printw( "O");
+    addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x+4);
     printw( "O");
+    addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x-4);
     printw( "O");
+    addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x+8);
     printw( "O");
+    addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x-8);
     printw( "O");
+    addpiece(cursor.y, cursor.x);
   }
-  move(cursor.y,cursor.x);
 }
 
       
