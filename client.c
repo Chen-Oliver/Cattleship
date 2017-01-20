@@ -10,7 +10,18 @@
 #include "networking.h"
 
 int board [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
-int *sdArr;
+int *turnAndWhere;
+char buffer[MESSAGE_BUFFER_SIZE];
+int connection;
+struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
+  int x,y;
+}cursor;
+WINDOW *status_window;
+int winHeight=5;
+int winWidth=50;
+int winY=23;
+int winX=0;
+void readwrite();
 void addpiece(int y, int x){//adds the piece to board[][]
   int a = y-2;
   int b = x-5;
@@ -19,12 +30,6 @@ void addpiece(int y, int x){//adds the piece to board[][]
   board[a][b] = 1;
   }
 
-struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
-  int x,y;
-}cursor;
-WINDOW *status_window;
-int winHeight=5;
-int winWidth=50;
 //set cursor y and x to initY and initX if not already then move them by deltaY and deltaX
 void movecursor(int initY,int initX, int deltaY,int deltaX){
     if((cursor.y)!= initY) cursor.y = initY;
@@ -43,6 +48,16 @@ WINDOW *create_newwin(int height, int width, int starty, int startx){
 	wrefresh(local_win);		/* Show that box 		*/
 
 	return local_win;
+}
+void recreateWin(){
+    delwin(status_window);
+    status_window=create_newwin(winHeight,winWidth,winY,winX);
+    wrefresh(status_window);
+}
+
+void statusprint(char *status){
+  mvwprintw(status_window,2,1,status);
+  wrefresh(status_window);
 }
 //y and x: coords of where to print
 //whichboard: either 1 or 2, specificies if "Your Board" or "Opponent Board" is printed
@@ -78,25 +93,9 @@ void startGame(){
   keypad(stdscr,TRUE);
   printboard(0,0,1);
   refresh();
-  status_window = create_newwin(winHeight,winWidth,23,0);
+  status_window = create_newwin(winHeight,winWidth,winY,winX);
   wrefresh(status_window);
 }
-
-void showBoard(){//press e to show board[][]
-  move(25, 0);  //move away from board //debugging
-  int i,j=0;
-  while (i!=10){
-    j=0;
-    while(j!=10){
-      printw("| %d ", board[i][j]);
-      j++;
-    }
-    printw("|\n");
-    i++;
-  }
-  move(cursor.y, cursor.x);
-}
-
 int checkstack(int y,int x){//check board[][] if boats will stack
   int a = y-2;
   int b = x-5;
@@ -274,8 +273,6 @@ int checkshipH( int n){//horizontal boundary ship check
   }
   return -1;
 }
-
-
 //chooses ship to be placed
 void chooseShipH(int n){
   if(n==6){
@@ -367,16 +364,22 @@ void placeShips(){
     move(cursor.y,cursor.x);
     refresh();
     if(x==1){
+      statusprint("waiting for other player...");
+      readwrite(1,"ready");//write ready to opponent
+      readwrite(0,NULL); //read from opponenet
+      if(strcmp(buffer,"ready")==0){
+      recreateWin();
       printboard(38,0,2);
       break;
     }
   }
   //endwin();
 }
+}
 
 //allows player to use arrow keys to move around board(s)
 void moveNplace(){
-  while(sdArr[0]==1){
+  while(turnAndWhere[0]==1){
   switch(getch()){
     case KEY_UP:
       if(cursor.y > 40) cursor.y -= 2;
@@ -392,7 +395,7 @@ void moveNplace(){
       break;
     case 's':
       printw("X");
-      sdArr[0]=0;
+      turnAndWhere[0]=0;
       break;
     default:
       break;
@@ -411,18 +414,16 @@ int main( int argc, char *argv[] ){
   else
     host = argv[1];
   char buffer[MESSAGE_BUFFER_SIZE];
-  int sd;
-
   int semkey = ftok("makefile",23);
   int semid = semget(semkey,1,0);
   int availConnections = semctl(semid,0,GETVAL);
   if(availConnections==0)printf("A game is ongoing. Try again later.\n"); //semaphore is 0,no more connecting
 
  else{  //need a way to ensure that both players have closed game before new people can join
-  sd = client_connect(host);
+  connection = client_connect(host);
   int shmkey = ftok("makefile",6);
   int shmid = shmget(shmkey,3*sizeof(int),0);
-  sdArr = (int*)shmat(shmid,0,0);
+  turnAndWhere = (int*)shmat(shmid,0,0);
   startGame();
   placeShips();
   //mvwprintw(status_window,2,1,"READY FOR BATTLE!!!");
@@ -434,3 +435,13 @@ int main( int argc, char *argv[] ){
 }
   return 0;
 }
+
+void readwrite(int readOrWrite,char *message) {
+  if(readOrWrite==0){
+  read(connection, buffer, sizeof(buffer));
+}
+  else if(readOrWrite==1){
+    strcpy(buffer,message);
+    write(connection, buffer, sizeof(buffer));
+}
+  }

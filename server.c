@@ -9,9 +9,21 @@
 #include <sys/shm.h>
 #include "networking.h"
 
-int *sdArr;
-void sub_server( int );
+int *turnAndWhere;
+void readwrite();
 int board [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
+int connection;
+char buffer[MESSAGE_BUFFER_SIZE];
+struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
+  int x,y;
+}cursor;
+
+WINDOW *status_window;
+int winHeight=5;
+int winWidth=50;
+int winY=23;
+int winX=0;
+
 void addpiece(int y, int x){//adds the piece to board[][]
   int a = y-2;
   int b = x-5;
@@ -20,13 +32,8 @@ void addpiece(int y, int x){//adds the piece to board[][]
   board[a][b] = 1;
   }
 
-struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
-  int x,y;
-}cursor;
 
-WINDOW *status_window;
-int winHeight=5;
-int winWidth=50;
+
 //set cursor y and x to initY and initX if not already then move them by deltaY and deltaX
 void movecursor(int initY,int initX, int deltaY,int deltaX){
     if((cursor.y)!= initY) cursor.y = initY;
@@ -45,6 +52,15 @@ WINDOW *create_newwin(int height, int width, int starty, int startx){
 	wrefresh(local_win);		/* Show that box 		*/
 
 	return local_win;
+}
+void statusprint(char *status){
+  mvwprintw(status_window,2,1,status);
+  wrefresh(status_window);
+}
+void recreateWin(){
+    delwin(status_window);
+    status_window=create_newwin(winHeight,winWidth,winY,winX);
+    wrefresh(status_window);
 }
 //y and x: coords of where to print
 //whichboard: either 1 or 2, specificies if "Your Board" or "Opponent Board" is printed
@@ -369,8 +385,14 @@ void placeShips(){
     move(cursor.y,cursor.x);
     refresh();
     if(x==1){
+      statusprint("waiting for other player...");
+      readwrite(1,"ready");//write ready to opponenet
+      readwrite(0,NULL); //read from oppoenent
+      if(strcmp(buffer,"ready")==0){
+      recreateWin();
       printboard(38,0,2);
       break;
+    }
     }
   }
   //endwin();
@@ -378,7 +400,7 @@ void placeShips(){
 
 //allows player to use arrow keys to move around board(s)
 void moveNplace(){
-  while(sdArr[0]==0){
+  while(turnAndWhere[0]==0){
   switch(getch()){
     case KEY_UP:
       if(cursor.y > 40) cursor.y -= 2;
@@ -394,7 +416,7 @@ void moveNplace(){
       break;
     case 's':
       printw("X");
-      sdArr[0]=1;
+      turnAndWhere[0]=1;
       break;
     default:
       break;
@@ -404,15 +426,15 @@ void moveNplace(){
   }
 }
 int main() {
-  int sd, connection;
+  int sd;
   sd = server_setup();
   connection = server_connect(sd);
   int shmkey = ftok("makefile",6);
   int shmid = shmget(shmkey,3*sizeof(int),0);
-  sdArr= (int*)shmat(shmid,0,0); //global variable for turn,move(coordinates)
-  sdArr[0]=0;
-  sdArr[1]=0;
-  sdArr[2]=0;
+  turnAndWhere= (int*)shmat(shmid,0,0); //global variable for turn,move(coordinates)
+  turnAndWhere[0]=0;
+  turnAndWhere[1]=0;
+  turnAndWhere[2]=0;
   startGame();
   placeShips();
   while(1){ //while(gameNotEnd)
@@ -422,12 +444,12 @@ int main() {
   return 0;
 }
 
-void sub_server( int sd ) {
-
-  char buffer[MESSAGE_BUFFER_SIZE];
-  while (read( sd, buffer, sizeof(buffer) )) {
-    printf("[SERVER %d] received: %s\n", getpid(), buffer );
-    write( sd, buffer, sizeof(buffer));
-  }
-
+void readwrite(int readOrWrite,char *message) {
+  if(readOrWrite==0){
+  read(connection, buffer, sizeof(buffer));
 }
+  else if(readOrWrite==1){
+    strcpy(buffer,message);
+    write(connection, buffer, sizeof(buffer));
+}
+  }
