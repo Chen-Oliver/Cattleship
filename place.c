@@ -10,16 +10,14 @@
 //need to simplify the place pieces function
 //need to put ship info into a file
 
-int board [10][10]= {0};
+int board [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
 
-
-
-void addpiece(int y, int x){
+void addpiece(int y, int x){//adds the piece to board[][]
   int a = y-2;
   int b = x-5;
   a = a/2;
   b = b/4;
-  board[b][a] = 1;
+  board[a][b] = 1;
   }
 
 struct coords{
@@ -50,6 +48,23 @@ void printboard(){
        "|10|   |   |   |   |   |   |   |   |   |   |\n"
  	 );
 }
+
+void showBoard(){//press e to show board[][]
+  move(25, 0);  //move away from board //debugging
+  int i,j=0;
+  while (i!=10){
+    j=0;
+    while(j!=10){
+      printw("| %d ", board[i][j]);
+      j++;
+    }
+    printw("|\n");
+    i++;
+  }
+  move(cursor.y, cursor.x);
+}
+
+
 void startGame(){
   initscr();
   noecho();
@@ -62,14 +77,87 @@ void startGame(){
   refresh();
 }
 
+int checkstack(int y,int x){//check board[][] if boats will stack
+  int a = y-2;
+  int b = x-5;
+  a = a/2;
+  b = b/4;
+  if (board[a][b]==1)
+    return 1;//return 1 if you will stack
+  return 0;//return 0 if there is no piece there
+}
 
-int checkshipV( int n){
-  //if(n==6){
-  //if (cursor.y+2>20){
-  //  return 0;
-  // }
-  // }
+int checkshipPH(int n) {//horizontal stacking check
+  int ans=0;
+  if(n==6){//check the pieces' placement
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y, cursor.x+4);
+  }
+  if(n==5 || n==4){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y, cursor.x+4);
+    ans+=checkstack(cursor.y, cursor.x-4);
+  }
+  
+  if(n==3){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y, cursor.x+4);
+    ans+=checkstack(cursor.y, cursor.x-4);
+    ans+=checkstack(cursor.y, cursor.x+8);
+  }
+  
+  if(n==2){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y, cursor.x+4);
+    ans+=checkstack(cursor.y, cursor.x-4);
+    ans+=checkstack(cursor.y, cursor.x+8);
+    ans+=checkstack(cursor.y, cursor.x-8);
+  }
+  if(ans>0)
+    return 0;//return 0 if you will stack
+  return 1; //return 1 if you will not stack
+}
 
+
+int checkshipPV(int n) {//vertical ship stacking check
+  int ans=0;
+  if(n==6){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y+2, cursor.x);
+  }
+  if(n==5 || n==4){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y+2, cursor.x);
+    ans+=checkstack(cursor.y-2, cursor.x);
+  }
+  
+  if(n==3){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y+2, cursor.x);
+    ans+=checkstack(cursor.y-2, cursor.x);
+    ans+=checkstack(cursor.y+4, cursor.x);
+  }
+  
+  if(n==2){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y+2, cursor.x);
+    ans+=checkstack(cursor.y-2, cursor.x);
+    ans+=checkstack(cursor.y+4, cursor.x);
+    ans+=checkstack(cursor.y-4, cursor.x);
+  }
+  
+  if (ans>0)
+    return 0;
+  return 1;
+}
+
+int checkshipV( int n){//vertical boundary ship check
+  if(n==6){
+    if (cursor.y+2>20){
+      return 0;
+    }
+  }
+  
   if(n==4||5){
     if (cursor.y+2>20 || cursor.y-2<1){
       return 0;
@@ -93,9 +181,9 @@ void chooseShipV(int n){
   if(n==6){
     printw( "O");
     addpiece(cursor.y, cursor.x);
-    move(cursor.y-2, cursor.x);
+    move(cursor.y+2, cursor.x);
     printw( "O");
-    addpiece(cursor.y-2, cursor.x);
+    addpiece(cursor.y+2, cursor.x);
   }
   if(n==5 || n==4){
     printw( "O");
@@ -140,7 +228,7 @@ void chooseShipV(int n){
   }
 
 }
-int checkshipH( int n){
+int checkshipH( int n){//horizontal boundary ship check
   if(n==6){
     if (cursor.x+4>43){
       return 0;
@@ -173,17 +261,17 @@ void chooseShipH(int n){
     addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x+4);
     printw( "O");
-    addpiece(cursor.y, cursor.x);
+    addpiece(cursor.y, cursor.x+4);
   }
   if(n==5 || n==4){
     printw( "O");
     addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x+4);
     printw( "O");
-    addpiece(cursor.y, cursor.x);
+    addpiece(cursor.y, cursor.x+4);
     move(cursor.y, cursor.x-4);
     printw( "O");
-    addpiece(cursor.y, cursor.x);
+    addpiece(cursor.y, cursor.x-4);
   }
   
   if(n==3){
@@ -191,13 +279,13 @@ void chooseShipH(int n){
     addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x+4);
     printw( "O");
-    addpiece(cursor.y, cursor.x);
+    addpiece(cursor.y, cursor.x+4);
     move(cursor.y, cursor.x-4);
     printw( "O");
-    addpiece(cursor.y, cursor.x);
+    addpiece(cursor.y, cursor.x-4);
     move(cursor.y, cursor.x+8);
     printw( "O");
-    addpiece(cursor.y, cursor.x);
+    addpiece(cursor.y, cursor.x+8);
   }
   
   if(n==2){
@@ -205,21 +293,21 @@ void chooseShipH(int n){
     addpiece(cursor.y, cursor.x);
     move(cursor.y, cursor.x+4);
     printw( "O");
-    addpiece(cursor.y, cursor.x);
+    addpiece(cursor.y, cursor.x+4);
     move(cursor.y, cursor.x-4);
     printw( "O");
-    addpiece(cursor.y, cursor.x);
+    addpiece(cursor.y, cursor.x-4);
     move(cursor.y, cursor.x+8);
     printw( "O");
-    addpiece(cursor.y, cursor.x);
+    addpiece(cursor.y, cursor.x+8);
     move(cursor.y, cursor.x-8);
     printw( "O");
-    addpiece(cursor.y, cursor.x);
+    addpiece(cursor.y, cursor.x-8);
   }
 }
 
       
-      
+
     
     
 void placeShips(){
@@ -239,7 +327,7 @@ void placeShips(){
       if(cursor.x < 39) cursor.x += 4;//at x=37(column 9) moves to x=41(column 10)
       break;
     case 'h':
-      if(checkshipH(x)){
+      if(checkshipH(x) && checkshipPH(x)){ 
 	if(x>1){
 	  chooseShipH(x);
 	  x--;
@@ -247,13 +335,15 @@ void placeShips(){
       }
       break;
     case 'v':
-      if(checkshipV(x)){
+      if(checkshipV(x) && checkshipPV(x)){
 	if(x>1){
 	  chooseShipV(x);
 	  x--;
 	}
       }
       break;
+    case 'e':
+      showBoard();
     default:
       break;
     }
@@ -262,6 +352,7 @@ void placeShips(){
   }
   //endwin();
 }
+    
 
 int main(){
   startGame();
