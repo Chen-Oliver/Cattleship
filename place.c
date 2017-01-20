@@ -351,6 +351,11 @@ void placeShips(){
     }
     move(cursor.y,cursor.x);
     refresh();
+    if(x==1){
+      move(50,50);
+      refresh();
+      break;
+    }
   }
   //endwin();
 }

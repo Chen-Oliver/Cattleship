@@ -39,7 +39,7 @@ int server_setup() {
   union semun su;
   su.val = 1;
   semctl(semid,0,SETVAL,su);
-   int shmkey = ftok("makefile",6);
+  int shmkey = ftok("makefile",6);
   int shmid = shmget(shmkey,3*sizeof(int),0644|IPC_CREAT);
   return sd;
 

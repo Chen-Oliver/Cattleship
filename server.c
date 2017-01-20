@@ -10,11 +10,18 @@
 #include "networking.h"
 
 void sub_server( int );
+int board [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
+void addpiece(int y, int x){//adds the piece to board[][]
+  int a = y-2;
+  int b = x-5;
+  a = a/2;
+  b = b/4;
+  board[a][b] = 1;
+  }
 
 struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
   int x,y;
 }cursor;
-
 WINDOW *status_window;
 int winHeight=5;
 int winWidth=50;
@@ -73,11 +80,256 @@ void startGame(){
   status_window = create_newwin(winHeight,winWidth,23,0);
   wrefresh(status_window);
 }
-//allows player to use arrow keys to move around board(s)
-void moveNplace(){
-  int a = 1;
-  while(a){
-  switch(getch()){
+
+void showBoard(){//press e to show board[][]
+  move(25, 0);  //move away from board //debugging
+  int i,j=0;
+  while (i!=10){
+    j=0;
+    while(j!=10){
+      printw("| %d ", board[i][j]);
+      j++;
+    }
+    printw("|\n");
+    i++;
+  }
+  move(cursor.y, cursor.x);
+}
+
+int checkstack(int y,int x){//check board[][] if boats will stack
+  int a = y-2;
+  int b = x-5;
+  a = a/2;
+  b = b/4;
+  if (board[a][b]==1)
+    return 1;//return 1 if you will stack
+  return 0;//return 0 if there is no piece there
+}
+
+int checkshipPH(int n) {//horizontal stacking check
+  int ans=0;
+  if(n==6){//check the pieces' placement
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y, cursor.x+4);
+  }
+  if(n==5 || n==4){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y, cursor.x+4);
+    ans+=checkstack(cursor.y, cursor.x-4);
+  }
+
+  if(n==3){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y, cursor.x+4);
+    ans+=checkstack(cursor.y, cursor.x-4);
+    ans+=checkstack(cursor.y, cursor.x+8);
+  }
+
+  if(n==2){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y, cursor.x+4);
+    ans+=checkstack(cursor.y, cursor.x-4);
+    ans+=checkstack(cursor.y, cursor.x+8);
+    ans+=checkstack(cursor.y, cursor.x-8);
+  }
+  if(ans>0)
+    return 0;//return 0 if you will stack
+  return 1; //return 1 if you will not stack
+}
+
+
+int checkshipPV(int n) {//vertical ship stacking check
+  int ans=0;
+  if(n==6){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y+2, cursor.x);
+  }
+  if(n==5 || n==4){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y+2, cursor.x);
+    ans+=checkstack(cursor.y-2, cursor.x);
+  }
+
+  if(n==3){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y+2, cursor.x);
+    ans+=checkstack(cursor.y-2, cursor.x);
+    ans+=checkstack(cursor.y+4, cursor.x);
+  }
+
+  if(n==2){
+    ans+=checkstack(cursor.y, cursor.x);
+    ans+=checkstack(cursor.y+2, cursor.x);
+    ans+=checkstack(cursor.y-2, cursor.x);
+    ans+=checkstack(cursor.y+4, cursor.x);
+    ans+=checkstack(cursor.y-4, cursor.x);
+  }
+
+  if (ans>0)
+    return 0;
+  return 1;
+}
+
+int checkshipV( int n){//vertical boundary ship check
+  if(n==6){
+    if (cursor.y+2>20){
+      return 0;
+    }
+  }
+
+  if(n==4||n==5){
+    if (cursor.y+2>20 || cursor.y-2<1){
+      return 0;
+    }
+  }
+  if(n==3){
+    if (cursor.y+4>20 || cursor.y-2<1){
+      return 0;
+    }
+  }
+  if(n==2){
+    if (cursor.y+4>20 || cursor.y-4<1){
+      return 0;
+    }
+    return 1;
+  }
+  return -1;
+}
+
+//chooses ship to be placed
+void chooseShipV(int n){
+  if(n==6){
+    printw( "O");
+    addpiece(cursor.y, cursor.x);
+    move(cursor.y+2, cursor.x);
+    printw( "O");
+    addpiece(cursor.y+2, cursor.x);
+  }
+  if(n==5 || n==4){
+    printw( "O");
+    addpiece(cursor.y, cursor.x);
+    move(cursor.y+2, cursor.x);
+    printw( "O");
+    addpiece(cursor.y+2, cursor.x);
+    move(cursor.y-2, cursor.x);
+    printw( "O");
+    addpiece(cursor.y-2, cursor.x);
+  }
+
+  if(n==3){
+    printw( "O");
+    addpiece(cursor.y, cursor.x);
+    move(cursor.y+2, cursor.x);
+    printw( "O");
+    addpiece(cursor.y+2, cursor.x);
+    move(cursor.y-2, cursor.x);
+    printw( "O");
+    addpiece(cursor.y-2, cursor.x);
+    move(cursor.y+4, cursor.x);
+    printw( "O");
+    addpiece(cursor.y+4, cursor.x);
+  }
+
+  if(n==2){
+    printw( "O");
+    addpiece(cursor.y, cursor.x);
+    move(cursor.y+2, cursor.x);
+    printw( "O");
+    addpiece(cursor.y+2, cursor.x);
+    move(cursor.y-2, cursor.x);
+    printw( "O");
+    addpiece(cursor.y-2, cursor.x);
+    move(cursor.y+4, cursor.x);
+    printw( "O");
+    addpiece(cursor.y+4, cursor.x);
+    move(cursor.y-4, cursor.x);
+    printw( "O");
+    addpiece(cursor.y-4, cursor.x);
+  }
+
+}
+int checkshipH( int n){//horizontal boundary ship check
+  if(n==6){
+    if (cursor.x+4>43){
+      return 0;
+    }
+  }
+
+  if(n==4||n==5){
+    if (cursor.x+4>43 || cursor.x-4<5){
+      return 0;
+    }
+  }
+  if(n==3){
+    if (cursor.x+8>43 || cursor.x-4<5){
+      return 0;
+    }
+  }
+  if(n==2){
+    if (cursor.x+8>43 || cursor.x-8<5){
+      return 0;
+    }
+    return 1;
+  }
+  return -1;
+}
+
+
+//chooses ship to be placed
+void chooseShipH(int n){
+  if(n==6){
+    printw( "O");
+    addpiece(cursor.y, cursor.x);
+    move(cursor.y, cursor.x+4);
+    printw( "O");
+    addpiece(cursor.y, cursor.x+4);
+  }
+  if(n==5 || n==4){
+    printw( "O");
+    addpiece(cursor.y, cursor.x);
+    move(cursor.y, cursor.x+4);
+    printw( "O");
+    addpiece(cursor.y, cursor.x+4);
+    move(cursor.y, cursor.x-4);
+    printw( "O");
+    addpiece(cursor.y, cursor.x-4);
+  }
+
+  if(n==3){
+    printw( "O");
+    addpiece(cursor.y, cursor.x);
+    move(cursor.y, cursor.x+4);
+    printw( "O");
+    addpiece(cursor.y, cursor.x+4);
+    move(cursor.y, cursor.x-4);
+    printw( "O");
+    addpiece(cursor.y, cursor.x-4);
+    move(cursor.y, cursor.x+8);
+    printw( "O");
+    addpiece(cursor.y, cursor.x+8);
+  }
+
+  if(n==2){
+    printw( "O");
+    addpiece(cursor.y, cursor.x);
+    move(cursor.y, cursor.x+4);
+    printw( "O");
+    addpiece(cursor.y, cursor.x+4);
+    move(cursor.y, cursor.x-4);
+    printw( "O");
+    addpiece(cursor.y, cursor.x-4);
+    move(cursor.y, cursor.x+8);
+    printw( "O");
+    addpiece(cursor.y, cursor.x+8);
+    move(cursor.y, cursor.x-8);
+    printw( "O");
+    addpiece(cursor.y, cursor.x-8);
+  }
+}
+void placeShips(){
+  int x = 6;
+  while(x){
+    switch(getch()){
     case KEY_UP:
       if(cursor.y > 2) cursor.y -= 2;//at y=4(row 2) moves to y=2(row 1)
       break;
@@ -90,9 +342,54 @@ void moveNplace(){
     case KEY_RIGHT:
       if(cursor.x < 39) cursor.x += 4;//at x=37(column 9) moves to x=41(column 10)
       break;
+    case 'h':
+      if(checkshipH(x) && checkshipPH(x)){
+	if(x>1){
+	  chooseShipH(x);
+	  x--;
+	}
+      }
+      break;
+    case 'v':
+      if(checkshipV(x) && checkshipPV(x)){
+	if(x>1){
+	  chooseShipV(x);
+	  x--;
+	}
+      }
+      break;
+  /*  case 'e':
+      showBoard(); */
+    default:
+      break;
+    }
+    move(cursor.y,cursor.x);
+    refresh();
+    if(x==1){
+      break;
+    }
+  }
+  //endwin();
+}
+
+//allows player to use arrow keys to move around board(s)
+void moveNplace(){
+  while(1){
+  switch(getch()){
+    case KEY_UP:
+      if(cursor.y > 40) cursor.y -= 2;
+      break;
+    case KEY_DOWN:
+      if(cursor.y < 57) cursor.y += 2;
+      break;
+    case KEY_LEFT:
+      if(cursor.x > 5) cursor.x -= 4;
+      break;
+    case KEY_RIGHT:
+      if(cursor.x < 39) cursor.x += 4;
+      break;
     case 's':
       printw("O");
-      a--;
       break;
     default:
       break;
@@ -104,13 +401,20 @@ void moveNplace(){
 int main() {
   int sd, connection;
   sd = server_setup();
-  connection = server_connect( sd );
+  connection = server_connect(sd);
+/*  int shmkey = ftok("makefile",6);
+  int shmid = shmget(shmkey,3*sizeof(int),0);
+  int *sdArr = (int*)shmat(shmid,0,0); //global variable for turn,move(coordinates)
+  sdArr[0]=0;
+  sdArr[1]=0;
+  sdArr[2]=0; */
   startGame();
+  placeShips();
+  printboard(38,0,2);
+//  if(sdArr[0]==0){
   moveNplace();
-  /*while(1){
-  //GAME CODE GOES HERE
-  }*/
-  sleep(10);
+//  sdArr[0]=1;
+//}
   endwin();
   return 0;
 }
