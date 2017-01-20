@@ -35,12 +35,12 @@ int server_setup() {
   error_check( i, "server bind" );
  //creates semaphore of value 2 to limit connections to 2 players
   int semkey = ftok("makefile",23);
-  int semid = semget(semkey,1,IPC_CREAT|IPC_EXCL|0644);
+  int semid = semget(semkey,1,IPC_CREAT|IPC_EXCL|0666);
   union semun su;
   su.val = 1;
   semctl(semid,0,SETVAL,su);
   int shmkey = ftok("makefile",6);
-  int shmid = shmget(shmkey,3*sizeof(int),0644|IPC_CREAT);
+  int shmid = shmget(shmkey,3*sizeof(int),0666|IPC_CREAT);
   return sd;
 
 }

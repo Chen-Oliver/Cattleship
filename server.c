@@ -9,6 +9,7 @@
 #include <sys/shm.h>
 #include "networking.h"
 
+int *sdArr;
 void sub_server( int );
 int board [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
 void addpiece(int y, int x){//adds the piece to board[][]
@@ -22,6 +23,7 @@ void addpiece(int y, int x){//adds the piece to board[][]
 struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
   int x,y;
 }cursor;
+
 WINDOW *status_window;
 int winHeight=5;
 int winWidth=50;
@@ -69,6 +71,7 @@ void printboard(int y,int x,int whichPlayer){
     i++;
     }
     movecursor(y,x,2,5); //moves cursor to the first box on the board
+    refresh();
   }
 //starts graphics
 void startGame(){
@@ -366,6 +369,7 @@ void placeShips(){
     move(cursor.y,cursor.x);
     refresh();
     if(x==1){
+      printboard(38,0,2);
       break;
     }
   }
@@ -374,7 +378,7 @@ void placeShips(){
 
 //allows player to use arrow keys to move around board(s)
 void moveNplace(){
-  while(1){
+  while(sdArr[0]==0){
   switch(getch()){
     case KEY_UP:
       if(cursor.y > 40) cursor.y -= 2;
@@ -389,7 +393,8 @@ void moveNplace(){
       if(cursor.x < 39) cursor.x += 4;
       break;
     case 's':
-      printw("O");
+      printw("X");
+      sdArr[0]=1;
       break;
     default:
       break;
@@ -402,19 +407,17 @@ int main() {
   int sd, connection;
   sd = server_setup();
   connection = server_connect(sd);
-/*  int shmkey = ftok("makefile",6);
+  int shmkey = ftok("makefile",6);
   int shmid = shmget(shmkey,3*sizeof(int),0);
-  int *sdArr = (int*)shmat(shmid,0,0); //global variable for turn,move(coordinates)
+  sdArr= (int*)shmat(shmid,0,0); //global variable for turn,move(coordinates)
   sdArr[0]=0;
   sdArr[1]=0;
-  sdArr[2]=0; */
+  sdArr[2]=0;
   startGame();
   placeShips();
-  printboard(38,0,2);
-//  if(sdArr[0]==0){
+  while(1){ //while(gameNotEnd)
   moveNplace();
-//  sdArr[0]=1;
-//}
+}
   endwin();
   return 0;
 }

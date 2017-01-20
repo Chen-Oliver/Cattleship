@@ -10,7 +10,7 @@
 #include "networking.h"
 
 int board [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
-
+int *sdArr;
 void addpiece(int y, int x){//adds the piece to board[][]
   int a = y-2;
   int b = x-5;
@@ -69,6 +69,7 @@ void printboard(int y,int x,int whichPlayer){
     i++;
     }
     movecursor(y,x,2,5); //moves cursor to the first box on the board
+    refresh();
   }
 //starts graphics
 void startGame(){
@@ -366,6 +367,7 @@ void placeShips(){
     move(cursor.y,cursor.x);
     refresh();
     if(x==1){
+      printboard(38,0,2);
       break;
     }
   }
@@ -374,7 +376,7 @@ void placeShips(){
 
 //allows player to use arrow keys to move around board(s)
 void moveNplace(){
-  while(1){
+  while(sdArr[0]==1){
   switch(getch()){
     case KEY_UP:
       if(cursor.y > 40) cursor.y -= 2;
@@ -389,7 +391,8 @@ void moveNplace(){
       if(cursor.x < 39) cursor.x += 4;
       break;
     case 's':
-      printw("O");
+      printw("X");
+      sdArr[0]=0;
       break;
     default:
       break;
@@ -417,21 +420,17 @@ int main( int argc, char *argv[] ){
 
  else{  //need a way to ensure that both players have closed game before new people can join
   sd = client_connect(host);
-  /*int shmkey = ftok("makefile",6);
+  int shmkey = ftok("makefile",6);
   int shmid = shmget(shmkey,3*sizeof(int),0);
-  int *sdArr = (int*)shmat(shmid,0,0);*/
+  sdArr = (int*)shmat(shmid,0,0);
   startGame();
   placeShips();
-  mvwprintw(status_window,2,1,"READY FOR BATTLE!!!");
-  wrefresh(status_window);
-  printboard(38,0,2);
-//  while(1){
-//  if(sdArr[0]==1){
+  //mvwprintw(status_window,2,1,"READY FOR BATTLE!!!");
+  //wrefresh(status_window);
+  while(1){ //while(gameNotEnd)
   moveNplace();
-//  sdArr[0]=0;
-//}
-//}
-  //endwin();
+}
+  endwin();
 }
   return 0;
 }
