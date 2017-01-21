@@ -9,9 +9,11 @@
 #include <sys/shm.h>
 #include "networking.h"
 
-int *turnAndWhere;
+int *turnAndWhere; //which player's turn, and what coordinate they are placing at(y,x)
 void readwrite();
-int board [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
+void statusprint(char *);
+int myboard [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
+int oppboard[10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
 int connection;
 char buffer[MESSAGE_BUFFER_SIZE];
 struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
@@ -20,19 +22,58 @@ struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
 
 WINDOW *status_window;
 int winHeight=5;
-int winWidth=50;
+int winWidth=65;
 int winY=23;
 int winX=0;
 
-void addpiece(int y, int x){//adds the piece to board[][]
+void addpiece(int y, int x){//adds the piece to myboard[][]
   int a = y-2;
   int b = x-5;
   a = a/2;
   b = b/4;
-  board[a][b] = 1;
+  myboard[a][b] = 1;
   }
-
-
+void makeMove(int y,int x,int hit){//add moves to oppboard[][], hit =1 means ship was hit, if 0 then miss
+  int a = y-2;
+  int b = x-5;
+  a=a/2;
+  b=b/4;
+  if(hit==1)oppboard[a][b]=-2;
+  if(hit==0)oppboard[a][b]=-1;
+}
+void cursortoActual(int y,int x){ //converts and sets move coordinates(in shm array) to coordinates they would have on opponent board
+  turnAndWhere[1]=y-38;
+  turnAndWhere[2]=x;
+}
+int isValid(int y,int x,int who){ //who = 1,check if your move is valid, who=2 check if opp move valid
+      //y and x are the shared mem coordinates(see above function)
+  int a = y-2;
+  int b = x-5;
+  a=a/2;
+  b=b/4;
+  if(who ==1){
+  if(oppboard[a][b]<0)return 0;
+  else if(oppboard[a][b]<2)
+    return 1;
+}
+  else if(who == 2){
+    if(myboard[a][b]==1){
+      myboard[a][b]=-2; //if hit ship set to -2
+      statusprint("Your ship was hit!");
+      readwrite(1,"You hit a ship!");
+    }
+    else if(myboard[a][b]==0){
+      myboard[a][b]=-1;//if miss ship set to -1
+      statusprint("Opponent missed ship!");
+      readwrite(1,"You missed!");
+    }
+    move(y,x);
+    printw("X");
+    move(cursor.y,cursor.x);
+    return 1;
+}
+  return -1;
+  }
 
 //set cursor y and x to initY and initX if not already then move them by deltaY and deltaX
 void movecursor(int initY,int initX, int deltaY,int deltaX){
@@ -53,14 +94,15 @@ WINDOW *create_newwin(int height, int width, int starty, int startx){
 
 	return local_win;
 }
-void statusprint(char *status){
-  mvwprintw(status_window,2,1,status);
-  wrefresh(status_window);
-}
 void recreateWin(){
     delwin(status_window);
     status_window=create_newwin(winHeight,winWidth,winY,winX);
     wrefresh(status_window);
+}
+void statusprint(char *status){
+  recreateWin();
+  mvwprintw(status_window,2,1,status);
+  wrefresh(status_window);
 }
 //y and x: coords of where to print
 //whichboard: either 1 or 2, specificies if "Your Board" or "Opponent Board" is printed
@@ -100,27 +142,12 @@ void startGame(){
   wrefresh(status_window);
 }
 
-void showBoard(){//press e to show board[][]
-  move(25, 0);  //move away from board //debugging
-  int i,j=0;
-  while (i!=10){
-    j=0;
-    while(j!=10){
-      printw("| %d ", board[i][j]);
-      j++;
-    }
-    printw("|\n");
-    i++;
-  }
-  move(cursor.y, cursor.x);
-}
-
 int checkstack(int y,int x){//check board[][] if boats will stack
   int a = y-2;
   int b = x-5;
   a = a/2;
   b = b/4;
-  if (board[a][b]==1)
+  if (myboard[a][b]==1)
     return 1;//return 1 if you will stack
   return 0;//return 0 if there is no piece there
 }
@@ -391,13 +418,30 @@ void placeShips(){
       if(strcmp(buffer,"ready")==0){
       recreateWin();
       printboard(38,0,2);
+      statusprint("You're going first: arrows to move, 'S' to place");
       break;
     }
     }
   }
   //endwin();
 }
-
+void showboard(int a){//press e to show board[][]
+  move(5,50);  //move away from board //debugging
+  int i,j=0;
+  while (i!=10){
+    j=0;
+    while(j!=10){
+      if(a==1)
+      printw("| %d ", myboard[i][j]);
+      if(a==2)
+      printw("| %d ", oppboard[i][j]);
+      j++;
+    }
+    printw("|\n");
+    i++;
+  }
+  move(cursor.y, cursor.x);
+}
 //allows player to use arrow keys to move around board(s)
 void moveNplace(){
   while(turnAndWhere[0]==0){
@@ -414,16 +458,61 @@ void moveNplace(){
     case KEY_RIGHT:
       if(cursor.x < 39) cursor.x += 4;
       break;
-    case 's':
-      printw("X");
-      turnAndWhere[0]=1;
+    case 'm':
+      showboard(1);
       break;
+    case 'o':
+      showboard(2);
+      break;
+    case 's':
+      cursortoActual(cursor.y,cursor.x);
+      if(isValid(turnAndWhere[1],turnAndWhere[2],1)==1){ //check if my move is valid
+        //printw("X"); print S if ship hit, X if miss
+        turnAndWhere[0]=2;//move made, wait for message
+      }
+      else{
+        statusprint("Invalid move. Try again.");
+      }
     default:
       break;
     }
     move(cursor.y,cursor.x);
     refresh();
   }
+    if(turnAndWhere[0]==2){
+      readwrite(0,NULL);
+      if(strcmp(buffer,"You hit a ship!")==0){
+        printw("H");
+        refresh();
+        makeMove(turnAndWhere[1],turnAndWhere[2],1);
+      }
+      else if(strcmp(buffer,"You missed!")==0){
+        printw("M");
+        refresh();
+        makeMove(turnAndWhere[1],turnAndWhere[2],0);
+      }
+      statusprint(buffer);
+      turnAndWhere[0]=1;//opponent turn
+    }
+    else if(turnAndWhere[0]==3){//after opponent move, before your move
+      isValid(turnAndWhere[1],turnAndWhere[2],2);
+    }
+  }
+int allHit(int board[10][10]){
+  int health = 17;
+  int i;
+  int j;
+  for(i=0;i<10;i++){
+    for(j=0;j<10;j++){
+      if (board[i][j]==-2)health--;
+    }
+  }
+  if(health==0)return 1;
+  return 0;
+}
+int endGame(){
+  if(allHit(myboard)||allHit(oppboard))return 1;
+  return 0;
 }
 int main() {
   int sd;
@@ -437,7 +526,7 @@ int main() {
   turnAndWhere[2]=0;
   startGame();
   placeShips();
-  while(1){ //while(gameNotEnd)
+  while(!endGame()){
   moveNplace();
 }
   endwin();
