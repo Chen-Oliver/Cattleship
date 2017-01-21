@@ -421,7 +421,7 @@ void placeShips(){
   //endwin();
 }
 }
-void showboard(int a){//press e to show board[][]
+/*void showboard(int a){//press e to show board[][]
   move(5,50);  //move away from board //debugging
   int i,j=0;
   while (i!=10){
@@ -437,7 +437,7 @@ void showboard(int a){//press e to show board[][]
     i++;
   }
   move(cursor.y, cursor.x);
-}
+} */
 //allows player to use arrow keys to move around board(s)
 void moveNplace(){
   while(turnAndWhere[0]==1){
@@ -454,12 +454,12 @@ void moveNplace(){
     case KEY_RIGHT:
       if(cursor.x < 39) cursor.x += 4;
       break;
-    case 'm':
+  /*  case 'm':
       showboard(1);
       break;
     case 'o':
       showboard(2);
-      break;
+      break; */
     case 's':
         cursortoActual(cursor.y,cursor.x);
         if(isValid(turnAndWhere[1],turnAndWhere[2],1)==1){ //check if my move is valid
