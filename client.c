@@ -510,7 +510,10 @@ int endGame(){
   if(allHit(myboard)||allHit(oppboard))return 1;
   return 0;
 }
-
+void removeSem(int semid){
+  union semun su;
+  semctl(semid,0,IPC_RMID,su);
+}
 int main( int argc, char *argv[] ){
   char *host;
   if (argc != 2) {
@@ -537,12 +540,12 @@ int main( int argc, char *argv[] ){
 }
   if(allHit(myboard)) statusprint("You lost :(");
   else statusprint("You won :D ");
-  sleep(5);
+  removeSem(semid);
+  sleep(3);
   endwin();
 }
   return 0;
 }
-
 void readwrite(int readOrWrite,char *message) {
   if(readOrWrite==0){
   read(connection, buffer, sizeof(buffer));

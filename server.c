@@ -515,6 +515,10 @@ int endGame(){
   if(allHit(myboard)||allHit(oppboard))return 1;
   return 0;
 }
+void removeShm(int shmid){ //remove shared memory
+  struct shmid_ds d;
+  shmctl(shmid,IPC_RMID,&d);
+}
 int main() {
   int sd;
   sd = server_setup();
@@ -530,7 +534,8 @@ int main() {
   while(!endGame()) moveNplace();
   if(allHit(myboard)) statusprint("You lost :(");
   else statusprint("You won :D ");
-  sleep(5);
+  removeShm(shmid);
+  sleep(4);
   endwin();
   return 0;
 }
