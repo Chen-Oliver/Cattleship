@@ -524,7 +524,7 @@ int main( int argc, char *argv[] ){
     host = argv[1];
   char buffer[MESSAGE_BUFFER_SIZE];
   int semkey = ftok("makefile",23);
-  int semid = semget(semkey,1,0);
+  int semid = semget(semkey,1,0666);
   int availConnections = semctl(semid,0,GETVAL);
   if(availConnections==0)printf("A game is ongoing. Try again later.\n"); //semaphore is 0,no more connecting
 

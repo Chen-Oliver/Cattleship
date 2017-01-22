@@ -524,7 +524,7 @@ int main() {
   sd = server_setup();
   connection = server_connect(sd);
   int shmkey = ftok("makefile",6);
-  int shmid = shmget(shmkey,3*sizeof(int),0);
+  int shmid = shmget(shmkey,3*sizeof(int),0666);
   turnAndWhere= (int*)shmat(shmid,0,0); //global variable for turn,move(coordinates)
   turnAndWhere[0]=0;
   turnAndWhere[1]=0;
