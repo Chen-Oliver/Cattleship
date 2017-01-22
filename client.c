@@ -8,7 +8,7 @@
 #include <sys/sem.h>
 #include <sys/shm.h>
 #include "networking.h"
-
+#include <signal.h>
 int myboard [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
 int oppboard[10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
 int *turnAndWhere; //which player's turn, and what coordinate they are placing at(y,x)
@@ -54,22 +54,22 @@ void addpiece(int y, int x){//adds the piece to myboard[][]
     else
       return 1;
   }
-    else if(who == 2){
-      if(myboard[a][b]==1){
-        myboard[a][b]=-2; //if hit ship set to -2
-        statusprint("Your ship was hit!");
-        readwrite(1,"You hit a ship!");
-      }
-      else if(myboard[a][b]==0){
-        myboard[a][b]=-1;//if miss ship set to -1
-        statusprint("Opponent missed ship!");
-        readwrite(1,"You missed!");
-      }
-      move(y,x);
-      printw("X");
-      move(cursor.y,cursor.x);
-      return 1;
-  }
+  else if(who == 2){
+    if(myboard[a][b]==1){
+      myboard[a][b]=-2; //if hit ship set to -2
+      statusprint("Your ship was hit! Your turn.");
+      readwrite(1,"You hit a ship! Opponent's turn...");
+    }
+    else if(myboard[a][b]==0){
+      myboard[a][b]=-1;//if miss ship set to -1
+      statusprint("Opponent missed ship! Your turn.");
+      readwrite(1,"You missed! Opponent's turn...");
+    }
+    move(y,x);
+    printw("X");
+    move(cursor.y,cursor.x);
+    return 1;
+}
     return -1;
     }
 
@@ -477,15 +477,15 @@ void moveNplace(){
     }
     if(turnAndWhere[0]==2){//after opponent move, before your move
       isValid(turnAndWhere[1],turnAndWhere[2],2);
-      }
+    }
     else if(turnAndWhere[0]==3){
         readwrite(0,NULL);
-        if(strcmp(buffer,"You hit a ship!")==0){
+        if(strcmp(buffer,"You hit a ship! Opponent's turn...")==0){
           printw("H");
           refresh();
           makeMove(turnAndWhere[1],turnAndWhere[2],1);
         }
-        else if(strcmp(buffer,"You missed!")==0){
+        else if(strcmp(buffer,"You missed! Opponent's turn...")==0){
           printw("M");
           refresh();
           makeMove(turnAndWhere[1],turnAndWhere[2],0);
@@ -535,6 +535,9 @@ int main( int argc, char *argv[] ){
   while(!endGame()){
   moveNplace();
 }
+  if(allHit(myboard)) statusprint("You lost :(");
+  else statusprint("You won :D ");
+  sleep(5);
   endwin();
 }
   return 0;
