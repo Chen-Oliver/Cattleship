@@ -42,12 +42,7 @@ int server_setup() {
   sock.sin_port = htons(9001);
   i = bind( sd, (struct sockaddr *)&sock, sizeof(sock) );
   error_check( i, "server bind" );
- //creates semaphore to limit connection
-  int semkey = ftok("makefile",23);
-  int semid = semget(semkey,1,IPC_CREAT|IPC_EXCL|0666);
-  union semun su;
-  su.val = 1;
-  semctl(semid,0,SETVAL,su);
+
   return sd;
 
 }
@@ -80,14 +75,6 @@ int client_connect( char *host ) {
   sock.sin_port = htons(9001);
 
   printf("[client] connecting to: %s\n", host );
-  //when a client connects, down semaphore by 1
-  int semkey = ftok("makefile",23);
-  int semid = semget(semkey,1,0);
-  struct sembuf sb;
-  sb.sem_op=-1;
-  sb.sem_num=0;
-  sb.sem_flg=SEM_UNDO;
-  semop(semid,&sb,1);
   i = connect( sd, (struct sockaddr *)&sock, sizeof(sock) );
   error_check( i, "client connect");
 

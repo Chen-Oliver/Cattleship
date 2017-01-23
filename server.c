@@ -553,6 +553,8 @@ int main() {
   if(allHit(myboard)) statusprint("You lost :(");
   else statusprint("You won :D ");
   sleep(4);
+  close(sd);
+  close(connection);
   endwin();
   return 0;
 }
