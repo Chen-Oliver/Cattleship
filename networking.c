@@ -42,23 +42,28 @@ int server_setup() {
   sock.sin_port = htons(9001);
   i = bind( sd, (struct sockaddr *)&sock, sizeof(sock) );
   error_check( i, "server bind" );
-
+  int shmid = shmget(ftok("makefile",23),sizeof(int),IPC_CREAT|0666);
   return sd;
 
 }
 
 int server_connect(int sd) {
   int connection, i;
-
+  int shmid = shmget(ftok("makefile",23),sizeof(int),0666);
+  int* numConnections = shmat(shmid,0,0);
+  *numConnections = 1;
   i = listen(sd, 1);
   error_check( i, "server listen" );
 
   struct sockaddr_in sock1;
   unsigned int sock1_len = sizeof(sock1);
+  if(*numConnections==1){
   connection = accept( sd, (struct sockaddr *)&sock1, &sock1_len );
+  *numConnections =0;
   error_check( connection, "server accept" );
 
   printf("[server] connected to %s\n", inet_ntoa( sock1.sin_addr ) );
+}
   return connection;
 }
 
@@ -77,6 +82,5 @@ int client_connect( char *host ) {
   printf("[client] connecting to: %s\n", host );
   i = connect( sd, (struct sockaddr *)&sock, sizeof(sock) );
   error_check( i, "client connect");
-
   return sd;
 }

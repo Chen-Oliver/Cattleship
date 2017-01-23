@@ -547,15 +547,15 @@ int main() {
   int sd;
   sd = server_setup();
   connection = server_connect(sd);
+  close(sd);
   startGame();
   placeShips();
   while(!endGame()) moveNplace();
   if(allHit(myboard)) statusprint("You lost :(");
   else statusprint("You won :D ");
   sleep(4);
-  close(sd);
-  close(connection);
   endwin();
+
   return 0;
 }
 void readwrite(int readOrWrite,char *message) {
