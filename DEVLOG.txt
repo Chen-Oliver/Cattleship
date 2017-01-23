@@ -8,9 +8,9 @@ Oliver, Jan 18th
   -fixed placement bugs, moved placement code to client/server files
 Oliver, Jan 20th
   -added ready checking after ship placement
-  -started taking turns/gameplay(adding moves to player and opponent arrays, move checking)
+  -started taking turns/gameplay(adding moves to player and opponent arrays/boards, move checking)
 Oliver, Jan 21st
-  -completed gameplay with status updates
+  -completed gameplay(win/lose) with status updates(hit, miss)
   -added exiting after game end
 
 Dewan, 1/15
