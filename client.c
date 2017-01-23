@@ -540,7 +540,11 @@ int main( int argc, char *argv[] ){
   }
   else
     host = argv[1];
-
+  int semkey = ftok("makefile",23);
+  int semid = semget(semkey,1,0);
+  int availConnections = semctl(semid,0,GETVAL);
+  if(availConnections==0)printf("A game is ongoing. Try again later.\n"); //semaphore is 0,no more connecting
+  else{
   connection = client_connect(host);
   startGame();
   placeShips();
@@ -552,7 +556,7 @@ int main( int argc, char *argv[] ){
 
   sleep(3);
   endwin();
-
+}
   return 0;
 }
 void readwrite(int readOrWrite,char *message) {

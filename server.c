@@ -480,12 +480,6 @@ void moveNplace(){
     case KEY_RIGHT:
       if(cursor.x < 39) cursor.x += 4;
       break;
-/*    case 'm':
-      showboard(1);
-      break;
-    case 'o':
-      showboard(2);
-      break; */
     case 's':
       cursortoActual(cursor.y,cursor.x);
 
