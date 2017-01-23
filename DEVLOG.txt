@@ -1,0 +1,14 @@
+
+Oliver, Jan 14th-
+  -started graphics(game board, status window, arrow keys to move)
+  -adapted networking for project
+  -added semaphore to limit connection
+Oliver, Jan 18th
+  -added shared memory
+  -fixed placement bugs, moved placement code to client/server files
+Oliver, Jan 20th
+  -added ready checking after ship placement
+  -started taking turns/gameplay
+Oliver, Jan 21st
+  -completed gameplay with status updates
+  -added exiting after game end
