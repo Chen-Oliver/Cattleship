@@ -15,11 +15,16 @@ Oliver, Jan 21st
 
 Dewan, 1/15
        -enabled multi-ship placement
-Dewan, 1/18 
-       -added check for boarder 
+Dewan, 1/18
+       -added check for boarder
 Dewan, 1/19
        -created the array to represent player board
        -added ship stacking check
        -finished ship placement
 Dewan, 1/21-23
        -added sighandler for interrrupt signal
+
+Oliver, Jan 22nd/23rd
+  -remove shared memory for taking turns/storing opponent moves and switched to sending the data using sockets
+  -remove semaphore temporarily for fixing
+  -fixed networking so it works between two computers and not just locally

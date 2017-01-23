@@ -10,7 +10,8 @@
 #include <signal.h>
 #include "networking.h"
 
-int *turnAndWhere; //which player's turn, and what coordinate they are placing at(y,x)
+
+int movesdata[3]={0,0,0};
 void readwrite();
 void statusprint(char *);
 int myboard [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
@@ -27,6 +28,17 @@ int winWidth=65;
 int winY=23;
 int winX=0;
 
+void readwritesetArray(int which){//which == 1read array and set, which == 2 write array
+  if (which==1){
+    readwrite(0,NULL);
+    sscanf(buffer,"%d %d %d",&movesdata[0],&movesdata[1],&movesdata[2]);
+  }
+  else if(which == 2){
+    char str[100];
+    sprintf(str,"%d %d %d",movesdata[0],movesdata[1],movesdata[2]);
+    readwrite(1,str);
+    }
+}
 void addpiece(int y, int x){//adds the piece to myboard[][]
   int a = y-2;
   int b = x-5;
@@ -43,8 +55,9 @@ void makeMove(int y,int x,int hit){//add moves to oppboard[][], hit =1 means shi
   if(hit==0)oppboard[a][b]=-1;
 }
 void cursortoActual(int y,int x){ //converts and sets move coordinates(in shm array) to coordinates they would have on opponent board
-  turnAndWhere[1]=y-38;
-  turnAndWhere[2]=x;
+
+  movesdata[1]=y-38;
+  movesdata[2]=x;
 }
 int isValid(int y,int x,int who){ //who = 1,check if your move is valid, who=2 check if opp move valid
       //y and x are the shared mem coordinates(see above function)
@@ -445,7 +458,7 @@ void placeShips(){
 } */
 //allows player to use arrow keys to move around board(s)
 void moveNplace(){
-  while(turnAndWhere[0]==0){
+  while(movesdata[0]==0){
   switch(getch()){
     case KEY_UP:
       if(cursor.y > 40) cursor.y -= 2;
@@ -467,9 +480,10 @@ void moveNplace(){
       break; */
     case 's':
       cursortoActual(cursor.y,cursor.x);
-      if(isValid(turnAndWhere[1],turnAndWhere[2],1)==1){ //check if my move is valid
-        //printw("X"); print S if ship hit, X if miss
-        turnAndWhere[0]=2;//move made, wait for message
+
+      if(isValid(movesdata[1],movesdata[2],1)==1){
+        movesdata[0]=2;
+        readwritesetArray(2);
       }
       else{
         statusprint("Invalid move. Try again.");
@@ -480,23 +494,34 @@ void moveNplace(){
     move(cursor.y,cursor.x);
     refresh();
   }
-    if(turnAndWhere[0]==2){
+  if(movesdata[0]==1){
+    readwritesetArray(1);
+  }
+
+  else if(movesdata[0]==2){
       readwrite(0,NULL);
       if(strcmp(buffer,"You hit a ship! Opponent's turn...")==0){
         printw("H");
         refresh();
-        makeMove(turnAndWhere[1],turnAndWhere[2],1);
+
+      makeMove(movesdata[1],movesdata[2],1);
       }
       else if(strcmp(buffer,"You missed! Opponent's turn...")==0){
         printw("M");
         refresh();
-        makeMove(turnAndWhere[1],turnAndWhere[2],0);
+
+        makeMove(movesdata[1],movesdata[2],0);
       }
       statusprint(buffer);
-      turnAndWhere[0]=1;//opponent turn
+
+      movesdata[0]=1;
+      readwritesetArray(2);
     }
-    else if(turnAndWhere[0]==3){//after opponent move, before your move
-      isValid(turnAndWhere[1],turnAndWhere[2],2);
+
+    else if(movesdata[0]==3){
+
+      isValid(movesdata[1],movesdata[2],2);
+      readwritesetArray(1);//turn set to 0 by client
     }
   }
 int allHit(int board[10][10]){
@@ -515,26 +540,16 @@ int endGame(){
   if(allHit(myboard)||allHit(oppboard))return 1;
   return 0;
 }
-void removeShm(int shmid){ //remove shared memory
-  struct shmid_ds d;
-  shmctl(shmid,IPC_RMID,&d);
-}
+
 int main() {
   int sd;
   sd = server_setup();
   connection = server_connect(sd);
-  int shmkey = ftok("makefile",6);
-  int shmid = shmget(shmkey,3*sizeof(int),0);
-  turnAndWhere= (int*)shmat(shmid,0,0); //global variable for turn,move(coordinates)
-  turnAndWhere[0]=0;
-  turnAndWhere[1]=0;
-  turnAndWhere[2]=0;
   startGame();
   placeShips();
   while(!endGame()) moveNplace();
   if(allHit(myboard)) statusprint("You lost :(");
   else statusprint("You won :D ");
-  removeShm(shmid);
   sleep(4);
   endwin();
   return 0;

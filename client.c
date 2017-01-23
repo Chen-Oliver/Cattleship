@@ -11,7 +11,8 @@
 #include <signal.h>
 int myboard [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
 int oppboard[10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
-int *turnAndWhere; //which player's turn, and what coordinate they are placing at(y,x)
+
+int movesdata[3]={0,0,0}; //non shared memory version of ^
 char buffer[MESSAGE_BUFFER_SIZE];
 int connection;
 void statusprint(char *);
@@ -25,6 +26,17 @@ int winWidth=65;
 int winY=23;
 int winX=0;
 
+void readwritesetArray(int which){//which == 1read array and set, which == 2 write array
+  if (which==1){
+    readwrite(0,NULL);
+    sscanf(buffer,"%d %d %d",&movesdata[0],&movesdata[1],&movesdata[2]);
+  }
+  else if(which == 2){
+    char str[100];
+    sprintf(str,"%d %d %d",movesdata[0],movesdata[1],movesdata[2]);
+    readwrite(1,str);
+    }
+}
 void addpiece(int y, int x){//adds the piece to myboard[][]
   int a = y-2;
   int b = x-5;
@@ -32,28 +44,29 @@ void addpiece(int y, int x){//adds the piece to myboard[][]
   b = b/4;
   myboard[a][b] = 1;
   }
-  void makeMove(int y,int x,int hit){//add moves to oppboard[][], hit =1 means ship was hit, if 0 then miss
-    int a = y-2;
-    int b = x-5;
-    a=a/2;
-    b=b/4;
-    if(hit==1)oppboard[a][b]=-2;
-    if(hit==0)oppboard[a][b]=-1;
-  }
-  void cursortoActual(int y,int x){ //converts and sets move coordinates(in shm array) to coordinates they would have on opponent board
-    turnAndWhere[1]=y-38;
-    turnAndWhere[2]=x;
-  }
-  int isValid(int y,int x,int who){ //who = 1,check if your move is valid, who=2 check if opp move valid
-    int a = y-2;
-    int b = x-5;
-    a=a/2;
-    b=b/4;
-    if(who ==1){
-    if(oppboard[a][b]<0)return 0;
-    else
-      return 1;
-  }
+void makeMove(int y,int x,int hit){//add moves to oppboard[][], hit =1 means ship was hit, if 0 then miss
+  int a = y-2;
+  int b = x-5;
+  a=a/2;
+  b=b/4;
+  if(hit==1)oppboard[a][b]=-2;
+  if(hit==0)oppboard[a][b]=-1;
+}
+void cursortoActual(int y,int x){ //converts and sets move coordinates(in shm array) to coordinates they would have on opponent board
+  movesdata[1]=y-38;
+  movesdata[2]=x;
+}
+int isValid(int y,int x,int who){ //who = 1,check if your move is valid, who=2 check if opp move valid
+      //y and x are the shared mem coordinates(see above function)
+  int a = y-2;
+  int b = x-5;
+  a=a/2;
+  b=b/4;
+  if(who ==1){
+  if(oppboard[a][b]<0)return 0;
+  else if(oppboard[a][b]<2)
+    return 1;
+}
   else if(who == 2){
     if(myboard[a][b]==1){
       myboard[a][b]=-2; //if hit ship set to -2
@@ -70,8 +83,8 @@ void addpiece(int y, int x){//adds the piece to myboard[][]
     move(cursor.y,cursor.x);
     return 1;
 }
-    return -1;
-    }
+  return -1;
+  }
 
 //set cursor y and x to initY and initX if not already then move them by deltaY and deltaX
 void movecursor(int initY,int initX, int deltaY,int deltaX){
@@ -440,7 +453,7 @@ void placeShips(){
 } */
 //allows player to use arrow keys to move around board(s)
 void moveNplace(){
-  while(turnAndWhere[0]==1){
+  while(movesdata[0]==1){
   switch(getch()){
     case KEY_UP:
       if(cursor.y > 40) cursor.y -= 2;
@@ -462,9 +475,10 @@ void moveNplace(){
       break; */
     case 's':
         cursortoActual(cursor.y,cursor.x);
-        if(isValid(turnAndWhere[1],turnAndWhere[2],1)==1){ //check if my move is valid
+        if(isValid(movesdata[1],movesdata[2],1)==1){ //check if my move is valid
           //printw("X"); print S if ship hit, X if miss
-          turnAndWhere[0]=3;//move made,wait for message
+          movesdata[0]=3;//move made,wait for message
+          readwritesetArray(2);
         }
         else{
           statusprint("Invalid move. Try again.");
@@ -475,23 +489,29 @@ void moveNplace(){
       move(cursor.y,cursor.x);
       refresh();
     }
-    if(turnAndWhere[0]==2){//after opponent move, before your move
-      isValid(turnAndWhere[1],turnAndWhere[2],2);
+    if(movesdata[0]==0){
+      readwritesetArray(1);
     }
-    else if(turnAndWhere[0]==3){
+    else if(movesdata[0]==2){//after opponent move, before your move
+
+      isValid(movesdata[1],movesdata[2],2);
+      readwritesetArray(1);
+    }
+    else if(movesdata[0]==3){
         readwrite(0,NULL);
         if(strcmp(buffer,"You hit a ship! Opponent's turn...")==0){
           printw("H");
           refresh();
-          makeMove(turnAndWhere[1],turnAndWhere[2],1);
+          makeMove(movesdata[1],movesdata[2],1);
         }
         else if(strcmp(buffer,"You missed! Opponent's turn...")==0){
           printw("M");
           refresh();
-          makeMove(turnAndWhere[1],turnAndWhere[2],0);
+          makeMove(movesdata[1],movesdata[2],0);
         }
         statusprint(buffer);
-        turnAndWhere[0]=0;//opponent turn
+        movesdata[0]=0;//opponent turn
+        readwritesetArray(2);
       }
     }
 int allHit(int board[10][10]){
@@ -510,10 +530,7 @@ int endGame(){
   if(allHit(myboard)||allHit(oppboard))return 1;
   return 0;
 }
-void removeSem(int semid){
-  union semun su;
-  semctl(semid,0,IPC_RMID,su);
-}
+
 int main( int argc, char *argv[] ){
   char *host;
   if (argc != 2) {
@@ -522,17 +539,8 @@ int main( int argc, char *argv[] ){
   }
   else
     host = argv[1];
-  char buffer[MESSAGE_BUFFER_SIZE];
-  int semkey = ftok("makefile",23);
-  int semid = semget(semkey,1,0);
-  int availConnections = semctl(semid,0,GETVAL);
-  if(availConnections==0)printf("A game is ongoing. Try again later.\n"); //semaphore is 0,no more connecting
 
- else{  //need a way to ensure that both players have closed game before new people can join
   connection = client_connect(host);
-  int shmkey = ftok("makefile",6);
-  int shmid = shmget(shmkey,3*sizeof(int),0);
-  turnAndWhere = (int*)shmat(shmid,0,0);
   startGame();
   placeShips();
   while(!endGame()){
@@ -540,10 +548,10 @@ int main( int argc, char *argv[] ){
 }
   if(allHit(myboard)) statusprint("You lost :(");
   else statusprint("You won :D ");
-  removeSem(semid);
+
   sleep(3);
   endwin();
-}
+
   return 0;
 }
 void readwrite(int readOrWrite,char *message) {
