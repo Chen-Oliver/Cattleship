@@ -152,6 +152,7 @@ void startGame(){
   refresh();
   status_window = create_newwin(winHeight,winWidth,winY,winX);
   wrefresh(status_window);
+  statusprint("V to place vertically, H to place horizontally");
 }
 int checkstack(int y,int x){//check board[][] if boats will stack
   int a = y-2;

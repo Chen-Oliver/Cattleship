@@ -21,7 +21,14 @@ char buffer[MESSAGE_BUFFER_SIZE];
 struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
   int x,y;
 }cursor;
-
+static void sighandler(int signo){
+  if(signo==SIGINT){
+    write(connection,"Opponent quit",43);
+    endwin();
+    char * command[13]={"echo","You're","a","quitter!",":(",0};
+    int x = execvp(command[0],command);
+  }
+}
 WINDOW *status_window;
 int winHeight=5;
 int winWidth=65;
@@ -154,6 +161,7 @@ void startGame(){
   refresh();
   status_window = create_newwin(winHeight,winWidth,23,0);
   wrefresh(status_window);
+  statusprint("V to place vertically, H to place horizontally");
 }
 
 int checkstack(int y,int x){//check board[][] if boats will stack
@@ -554,7 +562,6 @@ int main() {
   endwin();
   return 0;
 }
-
 void readwrite(int readOrWrite,char *message) {
   if(readOrWrite==0){
   read(connection, buffer, sizeof(buffer));
