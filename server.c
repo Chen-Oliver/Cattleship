@@ -483,7 +483,7 @@ void moveNplace(){
     case 's':
       cursortoActual(cursor.y,cursor.x);
 
-      if(isValid(movesdata[1],movesdata[2],1)==1){
+      if(isValid(movesdata[1],movesdata[2],1)==1){ //player made move
         movesdata[0]=2;
         readwritesetArray(2);
       }
@@ -520,7 +520,7 @@ void moveNplace(){
       readwritesetArray(2);
     }
 
-    else if(movesdata[0]==3){
+    else if(movesdata[0]==3){  //opponent made move
 
       isValid(movesdata[1],movesdata[2],2);
       readwritesetArray(1);//turn set to 0 by client
