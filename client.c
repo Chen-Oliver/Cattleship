@@ -7,6 +7,7 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/shm.h>
+#include <fcntl.h>
 #include "networking.h"
 #include <signal.h>
 int myboard [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
@@ -538,6 +539,9 @@ int endGame(){
 
 int main( int argc, char *argv[] ){
   signal(SIGINT,sighandler);
+  int myturns;
+  int myhitpct;
+  int mymisspct;
   char *host;
   if (argc != 2) {
     printf("host not specified, attempting connection to 127.0.0.1\n");
@@ -551,13 +555,24 @@ int main( int argc, char *argv[] ){
   while(!endGame()){
   moveNplace();
 }
-  if(allHit(myboard)) statusprint("You lost :(");
-  else statusprint("You won :D ");
+  readwrite(0,NULL);
+  sscanf(buffer,"%d %d %d",&myturns,&myhitpct,&mymisspct);
+  if(allHit(myboard)){
+    recreateWin();
+    mvwprintw(status_window,2,1,"You lost :(, Turns:%d, Hit Pct: %d, Miss Pct: %d",myturns,myhitpct,mymisspct);
+    wrefresh(status_window);
+  }
+  else{
+    recreateWin();
+    mvwprintw(status_window,2,1,"You won :D, Turns:%d, Hit Pct: %d, Miss Pct: %d",myturns,myhitpct,mymisspct);
+    wrefresh(status_window);
+  }
 
-  sleep(3);
+  sleep(9);
   endwin();
   return 0;
 }
+
 void readwrite(int readOrWrite,char *message) {
   if(readOrWrite==0){
   read(connection, buffer, sizeof(buffer));

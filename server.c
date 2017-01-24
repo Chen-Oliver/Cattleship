@@ -8,10 +8,22 @@
 #include <sys/sem.h>
 #include <sys/shm.h>
 #include <signal.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include "networking.h"
 
 
 int movesdata[4]={0,0,0,0};
+int myturns=0;
+int myhits=0;
+int mymisses=0;
+int oppturns=0;
+int opphits=0;
+int oppmisses=0;
+
+int leastturns=0;
+int highesthitpct=0;
+int highestmisspct=0;
 void readwrite();
 void statusprint(char *);
 int myboard [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
@@ -81,11 +93,13 @@ int isValid(int y,int x,int who){ //who = 1,check if your move is valid, who=2 c
       myboard[a][b]=-2; //if hit ship set to -2
       statusprint("Your ship was hit! Your turn.");
       readwrite(1,"You hit a ship! Opponent's turn...");
+      opphits++;
     }
     else if(myboard[a][b]==0){
       myboard[a][b]=-1;//if miss ship set to -1
       statusprint("Opponent missed ship! Your turn.");
       readwrite(1,"You missed! Opponent's turn...");
+      oppmisses++;
     }
     move(y,x);
     printw("X");
@@ -470,6 +484,7 @@ void moveNplace(){
       cursortoActual(cursor.y,cursor.x);
       if(isValid(movesdata[1],movesdata[2],1)==1){ //player made move
         movesdata[0]=2;
+        myturns++;
         readwritesetArray(2);
       }
       else{
@@ -502,13 +517,13 @@ void moveNplace(){
       if(strcmp(buffer,"You hit a ship! Opponent's turn...")==0){
         printw("H");
         refresh();
-
+        myhits++;
       makeMove(movesdata[1],movesdata[2],1);
       }
       else if(strcmp(buffer,"You missed! Opponent's turn...")==0){
         printw("M");
         refresh();
-
+        mymisses++;
         makeMove(movesdata[1],movesdata[2],0);
       }
       statusprint(buffer);
@@ -525,6 +540,7 @@ void moveNplace(){
         quitGame();
       }
       else{
+      oppturns++;
       isValid(movesdata[1],movesdata[2],2);
       readwritesetArray(1);//turn set to 0 by client
     }
@@ -556,9 +572,25 @@ int main() {
   startGame();
   placeShips();
   while(!endGame()) moveNplace();
-  if(allHit(myboard)) statusprint("You lost :(");
-  else statusprint("You won :D ");
-  sleep(4);
+  int fd = open("stats.txt",O_RDWR|O_APPEND|O_CREAT,0666);
+  char str[100];
+  int myhitpct = (int)(100*((double)myhits/myturns));
+  int mymisspct = (int)(100*((double)mymisses/myturns));
+  int opphitpct = (int)(100*((double)opphits/oppturns));
+  int oppmisspct = (int)(100*((double)oppmisses/oppturns));
+  if(allHit(myboard)){
+    recreateWin();
+    mvwprintw(status_window,2,1,"You lost :(, Turns:%d, Hit Pct: %d, Miss Pct: %d",myturns,myhitpct,mymisspct);
+    wrefresh(status_window);
+  }
+  else{
+    recreateWin();
+    mvwprintw(status_window,2,1,"You won :D, Turns:%d, Hit Pct: %d, Miss Pct: %d",myturns,myhitpct,mymisspct);
+    wrefresh(status_window);
+  }
+  sprintf(str,"%d %d %d",oppturns,opphitpct,oppmisspct);
+  readwrite(1,str);
+  sleep(10);
   endwin();
   return 0;
 }
