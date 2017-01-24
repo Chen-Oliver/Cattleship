@@ -28,3 +28,5 @@ Ceming, Jan 23rd
   -limit connections
   -quitting
   -added instructions
+Oliver, Jan 24th
+  - added end game stats
