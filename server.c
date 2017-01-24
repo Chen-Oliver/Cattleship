@@ -590,7 +590,7 @@ int main() {
   }
   sprintf(str,"%d %d %d",oppturns,opphitpct,oppmisspct);
   readwrite(1,str);
-  sleep(10);
+  sleep(8);
   endwin();
   return 0;
 }

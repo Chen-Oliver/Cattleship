@@ -568,7 +568,7 @@ int main( int argc, char *argv[] ){
     wrefresh(status_window);
   }
 
-  sleep(9);
+  sleep(7);
   endwin();
   return 0;
 }
