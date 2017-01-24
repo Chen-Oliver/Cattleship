@@ -12,6 +12,7 @@ Libraries used:  ncurses
 sudo apt-get install libncurses-dev
 
 Using the project(Instructions):
+      0) Open terminal in full screen
       1) ./server to run the server (Player 1)
       2) ./client <IP> or ./client if localhost (Player 2)
       3) After the boards appear, each player begin placing ships by pressing V or H on a valid coordinate(Any that is not occupied on the board).
