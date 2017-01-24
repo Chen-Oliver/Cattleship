@@ -1,3 +1,5 @@
+Note: If you have trouble reading this on github, please open it in the terminal full screen.
+
 Project title:
     Cattleship (Battleship written in C)
     
