@@ -11,7 +11,7 @@
 #include "networking.h"
 
 
-int movesdata[3]={0,0,0};
+int movesdata[4]={0,0,0,0};
 void readwrite();
 void statusprint(char *);
 int myboard [10][10]= {{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
@@ -21,14 +21,13 @@ char buffer[MESSAGE_BUFFER_SIZE];
 struct coords{ //stores coordinates of on screen cursor(lowest is y=0,x=0)
   int x,y;
 }cursor;
+
 static void sighandler(int signo){
-  if(signo==SIGINT){
-    write(connection,"Opponent quit",43);
-    endwin();
-    char * command[13]={"echo","You're","a","quitter!",":(",0};
-    int x = execvp(command[0],command);
+  if(signo ==SIGINT){
+    statusprint("Use 'q' to quit during turn");
   }
 }
+
 WINDOW *status_window;
 int winHeight=5;
 int winWidth=65;
@@ -38,11 +37,11 @@ int winX=0;
 void readwritesetArray(int which){//which == 1read array and set, which == 2 write array
   if (which==1){
     readwrite(0,NULL);
-    sscanf(buffer,"%d %d %d",&movesdata[0],&movesdata[1],&movesdata[2]);
+    sscanf(buffer,"%d %d %d %d",&movesdata[0],&movesdata[1],&movesdata[2],&movesdata[3]);
   }
   else if(which == 2){
     char str[100];
-    sprintf(str,"%d %d %d",movesdata[0],movesdata[1],movesdata[2]);
+    sprintf(str,"%d %d %d %d",movesdata[0],movesdata[1],movesdata[2],movesdata[3]);
     readwrite(1,str);
     }
 }
@@ -426,8 +425,6 @@ void placeShips(){
 	}
       }
       break;
-  /*  case 'e':
-      showBoard(); */
     default:
       break;
     }
@@ -447,23 +444,12 @@ void placeShips(){
   }
   //endwin();
 }
-/*void showboard(int a){//press e to show board[][]
-  move(5,50);  //move away from board //debugging
-  int i,j=0;
-  while (i!=10){
-    j=0;
-    while(j!=10){
-      if(a==1)
-      printw("| %d ", myboard[i][j]);
-      if(a==2)
-      printw("| %d ", oppboard[i][j]);
-      j++;
-    }
-    printw("|\n");
-    i++;
-  }
-  move(cursor.y, cursor.x);
-} */
+
+void quitGame(){
+  sleep(2);
+  endwin();
+  kill(getpid(),SIGTERM);
+}
 //allows player to use arrow keys to move around board(s)
 void moveNplace(){
   while(movesdata[0]==0){
@@ -482,7 +468,6 @@ void moveNplace(){
       break;
     case 's':
       cursortoActual(cursor.y,cursor.x);
-
       if(isValid(movesdata[1],movesdata[2],1)==1){ //player made move
         movesdata[0]=2;
         readwritesetArray(2);
@@ -490,6 +475,12 @@ void moveNplace(){
       else{
         statusprint("Invalid move. Try again.");
       }
+      break;
+      case 'q':
+        movesdata[3]=1;
+        movesdata[0]=2;
+        readwritesetArray(2);
+        break;
     default:
       break;
     }
@@ -497,10 +488,16 @@ void moveNplace(){
     refresh();
   }
   if(movesdata[0]==1){
-    readwritesetArray(1);
+  readwritesetArray(1);
   }
 
   else if(movesdata[0]==2){
+    if(movesdata[3]==1){
+      statusprint("You quit");
+      sleep(1);
+      quitGame();
+    }
+    else{
       readwrite(0,NULL);
       if(strcmp(buffer,"You hit a ship! Opponent's turn...")==0){
         printw("H");
@@ -519,12 +516,19 @@ void moveNplace(){
       movesdata[0]=1;
       readwritesetArray(2);
     }
+  }
 
     else if(movesdata[0]==3){  //opponent made move
-
+      if(movesdata[3]==1){
+        statusprint("Opponent quit, exiting game...");
+        sleep(1);
+        quitGame();
+      }
+      else{
       isValid(movesdata[1],movesdata[2],2);
       readwritesetArray(1);//turn set to 0 by client
     }
+  }
   }
 int allHit(int board[10][10]){
   int health = 17;
@@ -544,6 +548,7 @@ int endGame(){
 }
 
 int main() {
+ signal(SIGINT,sighandler);
   int sd;
   sd = server_setup();
   connection = server_connect(sd);
@@ -555,15 +560,17 @@ int main() {
   else statusprint("You won :D ");
   sleep(4);
   endwin();
-
   return 0;
 }
 void readwrite(int readOrWrite,char *message) {
   if(readOrWrite==0){
   read(connection, buffer, sizeof(buffer));
+
 }
   else if(readOrWrite==1){
     strcpy(buffer,message);
     write(connection, buffer, sizeof(buffer));
+
 }
+
   }
