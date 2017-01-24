@@ -22,7 +22,7 @@ Oliver, Jan 21st
   -added exiting after game end
 Oliver, Jan 22nd/23rd
   -remove shared memory for taking turns/storing opponent moves and switched to sending the data using sockets
-  -remove semaphore temporarily for fixing
+  -remove semaphore due to networking problem
   -fixed networking so it works between two computers and not just locally
 Ceming, Jan 23rd
   -limit connections
