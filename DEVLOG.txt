@@ -29,5 +29,6 @@ Ceming, Jan 23rd
   -quitting
   -added instructions
 Oliver, Dewan, Ceming Jan 24th
-  - Added to Readme	
-  - added end game stats
+  - Updated README.md	
+  - Added end game stats
+  - Updated Design doc
